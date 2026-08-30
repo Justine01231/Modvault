@@ -11,6 +11,7 @@ from telegram.ext import (
 
 from app.bot.states.repost import RepostState
 from app.services.authorization import is_admin
+from app.services.guard import private_dm_only
 from app.services.reposting import FIELDS, RepostData, build_community_message
 
 
@@ -119,7 +120,7 @@ def _repost_keyboard():
 
 def build_repost_conversation() -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[CommandHandler("repost", start_repost)],
+        entry_points=[CommandHandler("repost", private_dm_only(start_repost))],
         states={
             RepostState.CAPTURING: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, capture)

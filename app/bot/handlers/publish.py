@@ -6,6 +6,7 @@ from telegram.ext import CommandHandler, ContextTypes, ConversationHandler, Mess
 from app.bot.keyboards.publish import build_category_keyboard
 from app.bot.states.publish import PublishState
 from app.services.authorization import is_admin
+from app.services.guard import private_dm_only
 from app.services.publishing import download_document, validate_upload
 
 
@@ -63,7 +64,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def build_publish_conversation() -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[CommandHandler("publish", start_publish)],
+        entry_points=[CommandHandler("publish", private_dm_only(start_publish))],
         states={
             PublishState.WAITING_FOR_FILE: [
                 MessageHandler(

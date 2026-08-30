@@ -28,6 +28,7 @@ from app.bot.handlers.start import start
 from app.bot.keyboards.main import build_main_keyboard
 from app.config.settings import settings
 from app.database.database import init_db
+from app.services.guard import private_dm_only
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -77,7 +78,7 @@ def build_application() -> Application:
     application.add_handler(CommandHandler("ping", _log_incoming))
     application.add_handler(CommandHandler("modules", modules_command))
     application.add_handler(CommandHandler("search", search_command))
-    application.add_handler(CommandHandler("admin", admin_command))
+    application.add_handler(CommandHandler("admin", private_dm_only(admin_command)))
     application.add_handler(build_publish_conversation())
     application.add_handler(build_repost_conversation())
     application.add_handler(build_gh_release_conversation())

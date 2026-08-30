@@ -12,6 +12,7 @@ from telegram.ext import (
 )
 
 from app.services.authorization import is_admin
+from app.services.guard import private_dm_only
 from app.services.messaging import MessagePost
 
 
@@ -94,7 +95,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def build_message_conversation(command: str, template: str) -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[CommandHandler(command, _make_start(template))],
+        entry_points=[CommandHandler(command, private_dm_only(_make_start(template)))],
         states={
             MessageState.WAITING_TITLE: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, capture_title)

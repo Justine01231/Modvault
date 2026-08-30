@@ -14,6 +14,7 @@ from telegram.ext import (
 from app.services.authorization import is_admin
 from app.services.github_client import GitHubError, fetch_release
 from app.services.github_release import format_github_release
+from app.services.guard import private_dm_only
 
 
 class GitHubState(enum.IntEnum):
@@ -81,7 +82,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def build_gh_release_conversation() -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[CommandHandler("release", start_gh_release)],
+        entry_points=[CommandHandler("release", private_dm_only(start_gh_release))],
         states={
             GitHubState.WAITING_REPO: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, receive_repo)
