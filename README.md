@@ -116,7 +116,22 @@ Three processes, all runnable from this codebase:
 - **Webhook**: `python -m app.webhook`
 - **Dashboard**: `python -m app.dashboard.main`
 
-Production: wrap each in Docker (a `Dockerfile` is planned) behind a reverse proxy for the webhook/dashboard.
+### Docker
+
+A multi-service `docker-compose.yml` runs bot, webhook, and dashboard from one image, sharing a named SQLite volume.
+
+```bash
+cp .env.example .env      # fill in BOT_TOKEN, TELEGRAM_CHANNEL_ID, ADMIN_IDS, WEBHOOK_SECRET, etc.
+docker compose up --build -d
+```
+
+- Bot → Telegram (no published port)
+- Webhook → `:8080` (add a reverse proxy for TLS in production)
+- Dashboard → `:8000`
+
+Stop with `docker compose down`. Persisted data lives in the `modulab_data` volume.
+
+> Note: all three services share one embedded SQLite file. Fine for single-host/low-traffic and dashboard/webhook read-mostly workloads; move to PostgreSQL for heavier concurrent writes.
 
 ## Roadmap
 
@@ -126,7 +141,8 @@ Production: wrap each in Docker (a `Dockerfile` is planned) behind a reverse pro
 - [x] Phase 8: templates (release/community/announcement/update/warning)
 - [x] Phase 9: GitHub integration (/release + webhook auto-announce)
 - [x] Phase 10: web dashboard + REST API
-- [ ] Future: React SPA, Dockerfile, PostgreSQL production
+- [x] Deployment: git, Dockerfile, docker-compose
+- [ ] Future: React SPA, PostgreSQL production
 
 ## Security
 

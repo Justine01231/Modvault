@@ -1,0 +1,35 @@
+services:
+  bot:
+    build: .
+    command: python -m app.main
+    env_file: .env
+    volumes:
+      - modulab_data:/app/data
+    restart: unless-stopped
+    # No ports: the bot only talks outbound to Telegram. The DB auto-creates
+    # and persists on the shared volume.
+
+  webhook:
+    build: .
+    command: python -m app.webhook
+    env_file: .env
+    volumes:
+      - modulab_data:/app/data
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    # In production, put this behind a reverse proxy (caddy/nginx) with TLS.
+
+  dashboard:
+    build: .
+    command: python -m app.dashboard.main
+    env_file: .env
+    volumes:
+      - modulab_data:/app/data
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    # http://localhost:8000
+
+volumes:
+  modulab_data:
