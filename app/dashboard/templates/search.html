@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Search — ModuLab{% endblock %}
+{% block content %}
+<section>
+  <h2>🔍 Search results{% if q %} for "{{ q }}"{% endif %}</h2>
+  {% if results %}
+  <div class="module-grid">
+    {% for m in results %}
+    <a class="module-card" href="/module/{{ m.id }}">
+      <div class="module-card-title">{{ m.name }}</div>
+      {% if m.category %}<span class="pill">{{ m.category }}</span>{% endif %}
+      {% if m.author %}<div class="module-card-author">👤 {{ m.author.name }}</div>{% endif %}
+      {% if m.releases %}<div class="module-card-ver">v{{ m.releases[0].version }}</div>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No modules found{% if q %} for "{{ q }}"{% endif %}.</p>
+  {% endif %}
+</section>
+{% endblock %}

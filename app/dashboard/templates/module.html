@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ module.name }} — ModuLab{% endblock %}
+{% block content %}
+<nav class="breadcrumb"><a href="/">Home</a> › <a href="/search?q={{ module.category or '' }}">{{ module.category or 'Module' }}</a></nav>
+
+<section class="module-detail">
+  <h1>🧩 {{ module.name }}</h1>
+  <div class="module-meta">
+    {% if module.category %}<span class="pill">{{ module.category }}</span>{% endif %}
+    {% if module.author %}<span class="pill">👤 {{ module.author.name }}</span>{% endif %}
+    {% if module.repository_url %}<a class="pill link" href="{{ module.repository_url }}" target="_blank">🌐 Source</a>{% endif %}
+  </div>
+  {% if module.description %}<p class="module-desc">{{ module.description }}</p>{% endif %}
+
+  {% if module.author and module.author.github_url %}
+  <p>🐙 <a href="{{ module.author.github_url }}" target="_blank">GitHub profile</a></p>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Releases</h2>
+  {% if module.releases %}
+  <table class="release-table">
+    <thead><tr><th>Version</th><th>File</th><th>Size</th></tr></thead>
+    <tbody>
+      {% for r in module.releases %}
+      <tr>
+        <td><strong>{{ r.version }}</strong>{% if r.version_code %} <span class="muted">({{ r.version_code }})</span>{% endif %}</td>
+        <td>{{ r.file_name or '—' }}</td>
+        <td>{{ r.file_size_display or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No releases yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

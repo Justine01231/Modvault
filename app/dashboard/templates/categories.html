@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Categories — ModuLab{% endblock %}
+{% block content %}
+<section>
+  <h2>📂 Categories</h2>
+  <div class="category-grid">
+    {% for c in categories %}
+    <a class="category-card" href="/search?q={{ c.name }}">
+      <div class="category-name">{{ c.name }}</div>
+      <div class="category-count">{{ counts.get(c.name, 0) }} modules</div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

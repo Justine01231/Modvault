@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}ModuLab — Modules{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>🧩 ModuLab</h1>
+  <p>Module distribution platform — browse released Android modules.</p>
+  <div class="stats-row">
+    <div class="stat"><span class="stat-num">{{ stats.modules }}</span><span class="stat-label">Modules</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.releases }}</span><span class="stat-label">Releases</span></div>
+    <div class="stat"><span class="stat-num">{{ stats.community }}</span><span class="stat-label">Community</span></div>
+  </div>
+  {% if stats.top %}
+  <div class="top-cats">
+    <strong>Top categories:</strong>
+    {% for t in stats.top %}<span class="pill">{{ t.category }} ({{ t.count }})</span>{% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Latest Modules</h2>
+  {% if modules %}
+  <div class="module-grid">
+    {% for m in modules %}
+    <a class="module-card" href="/module/{{ m.id }}">
+      <div class="module-card-title">{{ m.name }}</div>
+      {% if m.category %}<span class="pill">{{ m.category }}</span>{% endif %}
+      {% if m.author %}<div class="module-card-author">👤 {{ m.author.name }}</div>{% endif %}
+      {% if m.description %}<p class="module-card-desc">{{ m.description[:90] }}{% if m.description|length > 90 %}…{% endif %}</p>{% endif %}
+      {% if m.releases %}<div class="module-card-ver">v{{ m.releases[0].version }}</div>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No modules published yet.</p>
+  {% endif %}
+</section>
+{% endblock %}
