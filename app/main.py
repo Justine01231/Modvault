@@ -16,6 +16,7 @@ from app.bot.callbacks.message import message_cancel, message_confirm
 from app.bot.callbacks.publish import publish_cancel, publish_confirm, publish_edit
 from app.bot.callbacks.repost import repost_cancel, repost_confirm
 from app.bot.handlers.admin import admin_command
+from app.bot.handlers.debug import debug_command
 from app.bot.handlers.github_release import build_gh_release_conversation
 from app.bot.handlers.help import help_command
 from app.bot.handlers.message import build_message_conversation
@@ -35,11 +36,23 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+async def _log_incoming(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    chat = update.effective_chat
+    logger.info(
+        "INCOMING update: type=%s chat_id=%s chat_type=%s text=%r",
+        update.update_id,
+        chat.id if chat else None,
+        chat.type if chat else None,
+        update.effective_message.text if update.effective_message else None,
+    )
+
+
 async def post_init(application: Application) -> None:
     init_db()
     commands = [
         ("start", "Welcome"),
         ("help", "Help"),
+        ("debug", "Show chat ID / your ID"),
         ("publish", "Publish a module (admin)"),
         ("release", "Publish a GitHub release (admin)"),
         ("repost", "Repost a community module (admin)"),
@@ -60,6 +73,8 @@ def build_application() -> Application:
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("debug", debug_command))
+    application.add_handler(CommandHandler("ping", _log_incoming))
     application.add_handler(CommandHandler("modules", modules_command))
     application.add_handler(CommandHandler("search", search_command))
     application.add_handler(CommandHandler("admin", admin_command))
