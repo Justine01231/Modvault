@@ -7,6 +7,7 @@ from app.database.database import get_session
 from app.database.repositories.posts import add_post
 from app.database.repositories.releases import add_release
 from app.services.github_client import GitHubRelease
+from app.services.footer import append_footer
 from app.services.module_parser import ModuleMetadata
 
 TELEGRAM_API = f"https://api.telegram.org/bot{settings.bot_token}"
@@ -40,7 +41,7 @@ def _to_metadata(release: GitHubRelease) -> ModuleMetadata:
 async def announce_release(release: GitHubRelease) -> tuple[bool, str]:
     from app.services.github_release import format_github_release
 
-    text = format_github_release(release)
+    text = append_footer(format_github_release(release))
     message_id, error = await send_channel_message(text)
     if message_id is None:
         return False, error

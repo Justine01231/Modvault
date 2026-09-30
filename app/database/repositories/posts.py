@@ -39,3 +39,32 @@ def count_posts(session: Session, post_type: str | None = None) -> int:
     if post_type:
         stmt = stmt.where(Post.post_type == post_type)
     return len(session.scalars(stmt).all())
+
+
+def delete_post(session: Session, post_id: int) -> bool:
+    post = session.get(Post, post_id)
+    if post is None:
+        return False
+    session.delete(post)
+    session.commit()
+    return True
+
+
+def get_post_by_message(
+    session: Session, chat_id: str | int, message_id: int
+) -> Post | None:
+    """Fetch a post along with its linked release/module by Telegram chat+message."""
+    stmt = (
+        select(Post)
+        .where(
+            Post.telegram_chat_id == str(chat_id),
+            Post.telegram_message_id == message_id,
+        )
+        .limit(1)
+    )
+    post = session.scalars(stmt).first()
+    if post is not None:
+        # eager-load relationships for convenient access
+        if post.release is not None:
+            _ = post.release.module
+    return post

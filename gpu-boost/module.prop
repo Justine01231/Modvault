@@ -1,0 +1,7 @@
+id=gpuboost
+name=Universal GPU Boost
+version=v1.0
+versionCode=1
+author=MODULAB
+description=One module, multiple GPU platforms. Automatically detects Adreno/kgsl and Mali GPUs, giving you simple performance profiles without touching thermal controls.
+minMagisk=28000

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Universal GPU Boost</title>
+<style>
+  :root{
+    --bg:#0f1117; --card:#161a23; --card2:#1c212e;
+    --line:#262c3a; --txt:#e7ecf4; --mut:#8b94a7;
+    --acc:#4f8cff; --ok:#35c47e; --warn:#e8a13d; --err:#e5534b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Roboto,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);padding:18px}
+  .wrap{max-width:560px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:12px;margin:0 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+  .card h2{font-size:13px;color:var(--mut);margin:0 0 8px;text-transform:uppercase;letter-spacing:.4px}
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13px}
+  .kv b{color:var(--mut);font-weight:500}
+  .kv span{text-align:right;word-break:break-all}
+  .pill{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;margin-right:6px;color:var(--mut)}
+  .profile{border:1px solid var(--line);border-radius:12px;background:var(--card2);padding:12px;margin-bottom:10px}
+  .profile.selected{border-color:var(--acc)}
+  .phead{display:flex;justify-content:space-between;align-items:center}
+  .pname{font-weight:700;font-size:15px}
+  .ptag{font-size:11px;color:var(--mut)}
+  .pdesc{font-size:13px;color:var(--txt);margin:6px 0 10px;line-height:1.45}
+  .row{display:flex;justify-content:space-between;align-items:center}
+  .what{font-size:12px;color:var(--mut)}
+  button{background:var(--acc);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.4;cursor:default}
+  button.apply{margin-top:8px;width:100%;padding:10px}
+  .note{font-size:12px;color:var(--mut);line-height:1.5;margin-top:4px}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .25s;max-width:90%;z-index:9}
+  #toast.show{opacity:1}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Universal GPU Boost</h1>
+  <p class="sub">Guard-apply a GPU profile. No thermal nodes are touched. Fully reversible by reboot, disabling, or uninstalling the module.</p>
+
+  <div class="card">
+    <h2>Device detection</h2>
+    <div class="kv"><b>GPU</b><span id="gpu">-</span></div>
+    <div class="kv"><b>Chip / driver</b><span id="model">-</span></div>
+    <div class="kv"><b>Interface</b><span id="node">-</span></div>
+    <div class="kv"><b>Governor</b><span id="gov">-</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Current profile</h2>
+    <div><span class="pill" id="cur">safe</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Select profile</h2>
+    <div id="list"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="_state.js"></script>
+<script>
+var ST = (typeof window.__GB_STATE !== "undefined") ? window.__GB_STATE : {};
+
+var PROFILES = [
+  {
+    id: "safe",
+    name: "Safe",
+    tag: "mild gains - keep stock behavior",
+    desc: "Lifts the GPU frequency floor to ~40% of max while keeping the smart governor and idle pooling intact. Lowest risk, always reversible."
+  },
+  {
+    id: "balanced",
+    name: "Balanced",
+    tag: "medium gains - still adaptive",
+    desc: "Raises the GPU floor to ~65% of max. The GPU idles less aggressively during heavier workloads, governor stays adaptive."
+  },
+  {
+    id: "aggressive",
+    name: "Aggressive",
+    tag: "highest gains - hotter",
+    desc: "Sets an ~85% GPU floor and switches to the performance governor when offered, plus disables idle nap on Adreno. Expect more heat and battery drain. Still no thermal-node changes."
+  }
+];
+
+function esc(s) { return String(s == null ? "-" : s).replace(/[<>&"]/g, function(c){return { "<":"&lt;", ">":"&gt;", "&":"&amp;", '"':"&quot;"}[c];}); }
+
+function $(id){ return document.getElementById(id); }
+
+function toast(msg, cls){
+  var t=$("toast"); t.textContent=msg; t.className="show " + (cls||"");
+  clearTimeout(t._h); t._h=setTimeout(function(){ t.className=""; }, 2600);
+}
+
+function renderState(){
+  $("gpu").textContent = esc(ST.gpu || "unknown");
+  $("model").textContent = esc(ST.model || "-");
+  $("node").textContent = esc(ST.node || "-");
+  $("gov").textContent = esc(ST.governor || "-");
+  $("cur").textContent = esc(ST.profile || "safe");
+  renderList();
+}
+
+function renderList(){
+  var el=$("list"); el.innerHTML="";
+  PROFILES.forEach(function(p){
+    var sel = ST.profile === p.id;
+    var d=document.createElement("div");
+    d.className="profile" + (sel?" selected":"");
+    d.innerHTML =
+      '<div class="phead"><span class="pname">'+p.name+'</span><span class="ptag">'+esc(p.tag)+'</span></div>'+
+      '<div class="pdesc">'+p.desc+'</div>'+
+      '<button class="apply" data-id="'+p.id+'"'+(sel?' disabled':'')+'>Apply ' + p.name + (sel ? ' (active)' : '') + '</button>';
+    el.appendChild(d);
+  });
+  Array.prototype.forEach.call(el.querySelectorAll("button.apply"), function(b){
+    b.addEventListener("click", function(){ applyProfile(b.getAttribute("data-id")); });
+  });
+}
+
+function applyProfile(id){
+  toast("Applying " + id + " ...", "ok");
+  fetch("http://127.0.0.1:8475/api.cgi?action=apply&profile=" + encodeURIComponent(id), {cache:"no-store"})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(j.ok){
+        ST.profile = j.state.profile;
+        if(j.state.gpu && ST.gpu !== j.state.gpu) ST = j.state;
+        toast(j.warn || ("Applied: " + j.applied + " (active after this tap)"), "ok");
+        renderState();
+      } else {
+        toast((j.error||"Apply failed"), "err");
+      }
+    })
+    .catch(function(){ toast("Network error - WebUI still running?", "err"); });
+}
+
+renderState();
+</script>
+</body>
+</html>

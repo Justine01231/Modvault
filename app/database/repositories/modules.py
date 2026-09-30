@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.database.models import Author, Module, Release
+from app.database.models import Author, Module, Post, Release
 
 
 def count_modules(session: Session) -> int:
@@ -32,6 +32,32 @@ def get_module(session: Session, module_id: int) -> Module | None:
         .options(selectinload(Module.author), selectinload(Module.releases))
         .where(Module.id == module_id)
     )
+
+
+def delete_module(session: Session, module_id: int) -> bool:
+    """Delete a module, its releases, their posts, and any now-orphaned author."""
+    module = session.get(Module, module_id)
+    if module is None:
+        return False
+
+    author = module.author
+
+    for release in list(module.releases):
+        session.query(Post).filter(Post.release_id == release.id).delete(synchronize_session=False)
+
+    for release in list(module.releases):
+        session.delete(release)
+
+    session.delete(module)
+    session.flush()
+
+    if author is not None:
+        remaining = select(Module.id).where(Module.author_id == author.id)
+        if not session.scalars(remaining).first():
+            session.delete(author)
+
+    session.commit()
+    return True
 
 
 def search_modules(session: Session, query: str, limit: int = 20) -> list[Module]:

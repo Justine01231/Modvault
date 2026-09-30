@@ -9,6 +9,7 @@ from app.database.repositories.posts import add_post
 from app.database.repositories.releases import add_release
 from app.services.github_client import GitHubRelease
 from app.services.github_release import format_github_release
+from app.services.footer import append_footer
 from app.services.module_parser import ModuleMetadata
 
 
@@ -40,7 +41,7 @@ async def gh_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         await query.edit_message_text("⚠️ No GitHub release data. Start again with /release.")
         return
 
-    text = format_github_release(release)
+    text = append_footer(format_github_release(release))
     try:
         sent = await context.bot.send_message(
             chat_id=settings.channel_id, text=text, parse_mode="HTML"

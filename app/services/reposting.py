@@ -7,6 +7,7 @@ from telegram.error import TelegramError
 from telegram.ext import ContextTypes
 
 from app.config.settings import settings
+from app.services.footer import append_footer
 from app.services.formatter import format_community_post
 
 
@@ -18,6 +19,7 @@ class RepostData:
     source: str = ""
     original_channel: str = ""
     notes: str = ""
+    source_post: str = ""
 
 
 POST_LIMIT = 1024
@@ -54,7 +56,7 @@ def build_community_message(repost: RepostData) -> str:
 async def publish_community(
     context: ContextTypes.DEFAULT_TYPE, repost: RepostData
 ) -> tuple[bool, str, int | None]:
-    text = build_community_message(repost)
+    text = append_footer(build_community_message(repost))
     if len(text) > POST_LIMIT:
         return (
             False,
@@ -62,9 +64,36 @@ async def publish_community(
             None,
         )
     try:
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+        url = repost.source_post or _source_url(repost)
+        reply_markup = None
+        if url:
+            reply_markup = InlineKeyboardMarkup(
+                [[InlineKeyboardButton("⬇️ Download", url=url)]]
+            )
+
         sent = await context.bot.send_message(
-            chat_id=settings.channel_id, text=text, parse_mode="HTML"
+            chat_id=settings.channel_id,
+            text=text,
+            parse_mode="HTML",
+            reply_markup=reply_markup,
         )
-        return True, f"✅ Community post published to <code>{settings.channel_id}</code>", sent.message_id
+        return (
+            True,
+            f"✅ Community post published to <code>{settings.channel_id}</code>",
+            sent.message_id,
+        )
     except TelegramError as exc:
         return False, f"❌ Publish failed: {exc}", None
+
+
+def _source_url(repost: RepostData) -> str:
+    if repost.original_channel and (
+        "@" in repost.original_channel or repost.original_channel.startswith("t.me")
+    ):
+        handle = repost.original_channel.lstrip("@")
+        return f"https://t.me/{handle}"
+    if repost.source:
+        return repost.source
+    return ""

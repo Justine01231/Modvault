@@ -22,6 +22,10 @@ class Settings:
     webhook_secret: str = ""
     webhook_port: int = 8080
     auto_announce_repos: frozenset[str] = field(default_factory=frozenset)
+    discussion_group_id: str = ""
+    channel_username: str = ""
+    discussion_username: str = ""
+    dashboard_admin_token: str = ""
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -45,6 +49,10 @@ class Settings:
             webhook_secret=os.getenv("WEBHOOK_SECRET", ""),
             webhook_port=int(os.getenv("WEBHOOK_PORT", "8080")),
             auto_announce_repos=auto_announce_repos,
+            discussion_group_id=os.getenv("DISCUSSION_GROUP_ID", ""),
+            channel_username=os.getenv("CHANNEL_USERNAME", ""),
+            discussion_username=os.getenv("DISCUSSION_USERNAME", ""),
+            dashboard_admin_token=os.getenv("DASHBOARD_ADMIN_TOKEN", ""),
         )
 
 

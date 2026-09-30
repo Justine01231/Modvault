@@ -34,11 +34,11 @@ class PostTemplate:
         lines: list[str] = []
 
         if self.header:
-            lines.append(self.header)
+            lines.append(f"<b>{self.header}</b>")
             lines.append("")
 
         if ctx.title:
-            lines.append(ctx.title)
+            lines.append(f"<b>{ctx.title}</b>")
             lines.append(SEPARATOR)
 
         if ctx.body:
@@ -47,7 +47,7 @@ class PostTemplate:
 
         if ctx.fields:
             for label, value in ctx.fields:
-                lines += [label, value, ""]
+                lines += [f"<b>{label}</b>", value, ""]
 
         if self.extra_footer:
             lines.append(self.extra_footer)

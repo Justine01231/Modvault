@@ -8,6 +8,7 @@ from telegram.error import TelegramError
 from telegram.ext import ContextTypes
 
 from app.config.settings import settings
+from app.services.footer import append_footer
 from app.services.formatter import format_file_size, format_release
 from app.services.module_parser import ModuleMetadata, extract_module_metadata
 from app.services.validation import validate_module
@@ -58,7 +59,7 @@ class PublishResult:
 async def publish_to_channel(
     context: ContextTypes.DEFAULT_TYPE, draft: ReleaseDraft
 ) -> PublishResult:
-    caption = build_preview(draft)
+    caption = append_footer(build_preview(draft))
     try:
         sent = await context.bot.send_document(
             chat_id=settings.channel_id,

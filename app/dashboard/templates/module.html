@@ -15,6 +15,9 @@
   {% if module.author and module.author.github_url %}
   <p>🐙 <a href="{{ module.author.github_url }}" target="_blank">GitHub profile</a></p>
   {% endif %}
+  <p style="margin-top:16px">
+    <button class="danger-btn" onclick="modulabDelete('/api/modules/{{ module.id }}', 'module')">🗑 Delete this module</button>
+  </p>
 </section>
 
 <section>

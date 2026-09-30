@@ -22,13 +22,16 @@
   {% if modules %}
   <div class="module-grid">
     {% for m in modules %}
-    <a class="module-card" href="/module/{{ m.id }}">
-      <div class="module-card-title">{{ m.name }}</div>
-      {% if m.category %}<span class="pill">{{ m.category }}</span>{% endif %}
-      {% if m.author %}<div class="module-card-author">👤 {{ m.author.name }}</div>{% endif %}
-      {% if m.description %}<p class="module-card-desc">{{ m.description[:90] }}{% if m.description|length > 90 %}…{% endif %}</p>{% endif %}
-      {% if m.releases %}<div class="module-card-ver">v{{ m.releases[0].version }}</div>{% endif %}
-    </a>
+    <div class="module-card">
+      <a class="module-card-link" href="/module/{{ m.id }}">
+        <div class="module-card-title">{{ m.name }}</div>
+        {% if m.category %}<span class="pill">{{ m.category }}</span>{% endif %}
+        {% if m.author %}<div class="module-card-author">👤 {{ m.author.name }}</div>{% endif %}
+        {% if m.description %}<p class="module-card-desc">{{ m.description[:90] }}{% if m.description|length > 90 %}…{% endif %}</p>{% endif %}
+        {% if m.releases %}<div class="module-card-ver">v{{ m.releases[0].version }}</div>{% endif %}
+      </a>
+      <button class="card-delete" onclick="modulabDelete('/api/modules/{{ m.id }}', 'module')" title="Delete module">🗑 Delete</button>
+    </div>
     {% endfor %}
   </div>
   {% else %}

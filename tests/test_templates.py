@@ -13,7 +13,7 @@ from app.services.templates.registry import REGISTRY, render_message
 
 
 def test_registry_contains_all_templates():
-    assert set(REGISTRY) == {"release", "community", "announcement", "update", "warning"}
+    assert set(REGISTRY) == {"release", "community", "announcement", "update", "warning", "post"}
 
 
 def test_announcement_template():

@@ -7,6 +7,7 @@ from app.services.templates.message import (
     UpdateTemplate,
     WarningTemplate,
 )
+from app.services.templates.post import PlainPostTemplate
 from app.services.templates.release import ReleaseContext, ReleaseTemplate
 
 REGISTRY: dict[str, type[PostTemplate]] = {
@@ -15,6 +16,7 @@ REGISTRY: dict[str, type[PostTemplate]] = {
     AnnouncementTemplate.name: AnnouncementTemplate,
     UpdateTemplate.name: UpdateTemplate,
     WarningTemplate.name: WarningTemplate,
+    PlainPostTemplate.name: PlainPostTemplate,
 }
 
 

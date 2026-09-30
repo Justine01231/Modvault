@@ -19,9 +19,9 @@ class CommunityTemplate(PostTemplate):
     name = "community"
 
     def render(self, ctx: CommunityContext) -> str:
-        lines: list[str] = ["🔄 COMMUNITY RELEASE", "", f"🧩 {ctx.name or 'Untitled Module'}"]
+        lines: list[str] = ["<b>🔄 COMMUNITY RELEASE</b>", "", f"<b>🧩 {ctx.name or 'Untitled Module'}</b>"]
         if ctx.version:
-            lines.append(f"v{ctx.version}")
+            lines.append(f"<b>v{ctx.version}</b>")
         lines += ["", SEPARATOR]
 
         attribution: list[tuple[str, str]] = []
@@ -36,7 +36,7 @@ class CommunityTemplate(PostTemplate):
 
         if attribution:
             for label, value in attribution:
-                lines += [label, value, ""]
+                lines += [f"<b>{label}</b>", value, ""]
 
         lines += [
             "⚠️ This project is not developed or maintained by MODULAB.",

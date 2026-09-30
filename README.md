@@ -54,6 +54,8 @@ Card styles live in `app/services/templates/` as a small registry + template cla
 
 Commands: `/announcement`, `/update`, `/warning` (admin) → title + body → preview → publish. All persisted with their own `post_type`.
 
+`/repost` (admin) can repost straight from a Telegram link: paste `t.me/<channel>/<msg>` and the bot fetches the post and reposts it. A single-module post becomes one community card; a post that's a list of items (e.g. `@handle | Github(url)` lines) gets one community card per item — then review before publishing.
+
 ## GitHub (Phase 9)
 
 `/release` (admin) → send a repo (`owner/repo` or full URL) → the bot fetches repo + latest release via the GitHub REST API and shows a ⚡ GITHUB RELEASE card → publish.

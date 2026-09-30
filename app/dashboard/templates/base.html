@@ -29,5 +29,20 @@
       <span>ModuLab — module distribution platform</span>
     </div>
   </footer>
+  <script>
+    async function modulabDelete(url, kind) {
+      if (!confirm("Delete this " + kind + " permanently? This cannot be undone.")) return;
+      const headers = {};
+      const token = localStorage.getItem("modulab_admin_token");
+      if (token) headers["X-Admin-Token"] = token;
+      const res = await fetch(url, { method: "DELETE", headers });
+      if (res.ok) { location.reload(); return; }
+      if (res.status === 403) {
+        const t = prompt("Admin token required for deletion:");
+        if (t) { localStorage.setItem("modulab_admin_token", t); location.reload(); return; }
+      }
+      alert("Delete failed (" + res.status + ")");
+    }
+  </script>
 </body>
 </html>

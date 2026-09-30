@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from telegram import Update, constants
 from telegram.ext import (
     CommandHandler,
@@ -13,6 +15,9 @@ from app.bot.states.repost import RepostState
 from app.services.authorization import is_admin
 from app.services.guard import private_dm_only
 from app.services.reposting import FIELDS, RepostData, build_community_message
+from app.services.telegram_link import TelegramLinkError, fetch_reposts
+
+logger = logging.getLogger(__name__)
 
 
 def _current_field(repost: RepostData) -> tuple | None:
@@ -31,10 +36,10 @@ async def start_repost(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     context.user_data["repost"] = RepostData()
-    field, label, example = FIELDS[0]
     await update.effective_message.reply_text(
-        f"🔄 Community repost — let's gather the details.\n\n"
-        f"Step 1/{len(FIELDS)}: {label.capitalize()} ({example})"
+        "🔄 Community repost — let's gather the details.\n\n"
+        f"Step 1/{len(FIELDS)}: {FIELDS[0][1].capitalize()} — or paste a "
+        f"<code>t.me/...</code> link to auto-fill from a post."
     )
     return RepostState.CAPTURING
 
@@ -52,6 +57,38 @@ async def capture(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await _preview(update, context)
 
     field, label, _ = current
+
+    if field == "name" and ("t.me/" in text or "telegram.me/" in text.lower()):
+        await update.effective_message.reply_text("⏳ Fetching the Telegram post...")
+        try:
+            reposts = await fetch_reposts(text)
+        except TelegramLinkError as exc:
+            await update.effective_message.reply_text(f"❌ {exc}\n\nSend the name manually, or a valid link.")
+            return RepostState.CAPTURING
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Failed to auto-fetch repost link")
+            await update.effective_message.reply_text(
+                f"❌ Could not read that post ({exc}). Fill the fields manually."
+            )
+            return RepostState.CAPTURING
+
+        if not reposts:
+            await update.effective_message.reply_text("❌ Nothing to repost in that post.")
+            return RepostState.CAPTURING
+
+        if len(reposts) > 1:
+            context.user_data["repost_list"] = reposts
+            names = "\n".join(f"• <code>{r.name}</code>" for r in reposts)
+            await update.effective_message.reply_text(
+                f"🔄 Found <b>{len(reposts)}</b> items in that post:\n\n{names}\n\n"
+                f"Repost all of them?",
+                parse_mode=constants.ParseMode.HTML,
+                reply_markup=_repost_list_keyboard(),
+            )
+            return RepostState.LIST_PREVIEW
+
+        context.user_data["repost"] = reposts[0]
+        return await _preview(update, context)
 
     if text.startswith("/skip"):
         setattr(repost, field, "")
@@ -112,6 +149,19 @@ def _repost_keyboard():
         [
             [
                 InlineKeyboardButton("✅ PUBLISH", callback_data="repost_confirm"),
+                InlineKeyboardButton("❌ CANCEL", callback_data="repost_cancel"),
+            ]
+        ]
+    )
+
+
+def _repost_list_keyboard():
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("✅ REPOST ALL", callback_data="repost_list_confirm"),
                 InlineKeyboardButton("❌ CANCEL", callback_data="repost_cancel"),
             ]
         ]

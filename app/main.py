@@ -14,13 +14,19 @@ from app.bot.callbacks.categories import category_selected
 from app.bot.callbacks.github_release import gh_cancel, gh_confirm
 from app.bot.callbacks.message import message_cancel, message_confirm
 from app.bot.callbacks.publish import publish_cancel, publish_confirm, publish_edit
-from app.bot.callbacks.repost import repost_cancel, repost_confirm
+from app.bot.callbacks.repost import (
+    repost_cancel,
+    repost_confirm,
+    repost_list_confirm,
+)
 from app.bot.handlers.admin import admin_command
+from app.bot.handlers.apk import build_apk_conversation
 from app.bot.handlers.debug import debug_command
 from app.bot.handlers.github_release import build_gh_release_conversation
 from app.bot.handlers.help import help_command
 from app.bot.handlers.message import build_message_conversation
 from app.bot.handlers.modules import modules_command
+from app.bot.handlers.post import build_post_conversation
 from app.bot.handlers.publish import build_publish_conversation
 from app.bot.handlers.repost import build_repost_conversation
 from app.bot.handlers.search import search_command
@@ -57,6 +63,8 @@ async def post_init(application: Application) -> None:
         ("publish", "Publish a module (admin)"),
         ("release", "Publish a GitHub release (admin)"),
         ("repost", "Repost a community module (admin)"),
+        ("post", "Post raw text to channel (admin)"),
+        ("apk", "Publish an APK file (admin)"),
         ("announcement", "Post an announcement (admin)"),
         ("update", "Post an update (admin)"),
         ("warning", "Post a warning (admin)"),
@@ -81,6 +89,8 @@ def build_application() -> Application:
     application.add_handler(CommandHandler("admin", private_dm_only(admin_command)))
     application.add_handler(build_publish_conversation())
     application.add_handler(build_repost_conversation())
+    application.add_handler(build_post_conversation())
+    application.add_handler(build_apk_conversation())
     application.add_handler(build_gh_release_conversation())
     application.add_handler(build_message_conversation("announcement", "announcement"))
     application.add_handler(build_message_conversation("update", "update"))
@@ -91,6 +101,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(publish_edit, pattern=r"^publish_edit$"))
     application.add_handler(CallbackQueryHandler(publish_cancel, pattern=r"^publish_cancel$"))
     application.add_handler(CallbackQueryHandler(repost_confirm, pattern=r"^repost_confirm$"))
+    application.add_handler(CallbackQueryHandler(repost_list_confirm, pattern=r"^repost_list_confirm$"))
     application.add_handler(CallbackQueryHandler(repost_cancel, pattern=r"^repost_cancel$"))
     application.add_handler(CallbackQueryHandler(message_confirm, pattern=r"^message_confirm$"))
     application.add_handler(CallbackQueryHandler(message_cancel, pattern=r"^message_cancel$"))

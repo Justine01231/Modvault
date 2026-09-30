@@ -1,22 +1,30 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Header, HTTPException, Query
 
+from app.config.settings import settings
 from app.dashboard.serializers import module_to_dict
 from app.database.database import get_session
 from app.database.repositories.modules import (
     count_modules,
     count_releases,
+    delete_module,
     get_module,
     list_modules,
     latest_releases,
     search_modules,
     top_categories,
 )
-from app.database.repositories.posts import count_posts
+from app.database.repositories.posts import count_posts, delete_post
 from app.database.repositories.categories import list_categories
 
 router = APIRouter(prefix="/api")
+
+
+def require_admin(x_admin_token: str | None = None) -> None:
+    """Refuse mutating requests when DASHBOARD_ADMIN_TOKEN is set and mismatched."""
+    if settings.dashboard_admin_token and x_admin_token != settings.dashboard_admin_token:
+        raise HTTPException(status_code=403, detail="Forbidden")
 
 
 @router.get("/health")
@@ -47,6 +55,24 @@ async def module_detail(module_id: int):
         if module is None:
             raise HTTPException(status_code=404, detail="Module not found")
         return module_to_dict(module)
+
+
+@router.delete("/modules/{module_id}")
+async def delete_module_endpoint(module_id: int, x_admin_token: str | None = Header(default=None)):
+    require_admin(x_admin_token)
+    with get_session() as session:
+        if not delete_module(session, module_id):
+            raise HTTPException(status_code=404, detail="Module not found")
+    return {"status": "deleted", "module_id": module_id}
+
+
+@router.delete("/posts/{post_id}")
+async def delete_post_endpoint(post_id: int, x_admin_token: str | None = Header(default=None)):
+    require_admin(x_admin_token)
+    with get_session() as session:
+        if not delete_post(session, post_id):
+            raise HTTPException(status_code=404, detail="Post not found")
+    return {"status": "deleted", "post_id": post_id}
 
 
 @router.get("/search")
